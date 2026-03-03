@@ -1,0 +1,16 @@
+{
+    "name": "Interactive Whiteboard",
+    "description": "Real-time collaborative whiteboard for Live Online Classes using Fabric.js",
+    "version": "1.0.0",
+    "WHITEBOARD_COLLAB_DEFAULT": "0",
+    "metadata": {
+        "fields": {
+            "WHITEBOARD_COLLAB_DEFAULT": {
+                "type": "switch",
+                "label": "Collaborative Mode by Default",
+                "placeholder": "Enable to allow students to draw by default",
+                "required": false
+            }
+        }
+    }
+}
