@@ -1,11 +1,11 @@
 <?php
 
-namespace Modules\Whiteboard\Controllers;
+namespace Modules\InteractiveWhiteboard\Controllers;
 
 use Illuminate\Http\Request;
 use Illuminate\Routing\Controller;
 use Illuminate\Support\Facades\View;
-use Modules\Whiteboard\Services\WhiteboardService;
+use Modules\InteractiveWhiteboard\Services\WhiteboardService;
 use App\Events\WhiteboardDrawEvent;
 use App\Events\WhiteboardCollabToggled;
 
@@ -18,7 +18,7 @@ class WhiteboardController extends Controller
         $this->service = new WhiteboardService();
 
         // Register module views directory so we can use view('whiteboard::...')
-        View::addNamespace('whiteboard', base_path('modules/whiteboard/views'));
+        View::addNamespace('whiteboard', base_path('modules/interactive-whiteboard/views'));
     }
 
     /**
@@ -229,7 +229,7 @@ class WhiteboardController extends Controller
             ->orderBy('created_at', 'desc')
             ->paginate(15);
 
-        View::addNamespace('whiteboard', base_path('modules/whiteboard/views'));
+        View::addNamespace('whiteboard', base_path('modules/interactive-whiteboard/views'));
 
         return view('whiteboard::dashboard', compact('snapshots'));
     }

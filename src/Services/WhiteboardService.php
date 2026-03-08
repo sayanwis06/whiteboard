@@ -1,6 +1,6 @@
 <?php
 
-namespace Modules\Whiteboard\Services;
+namespace Modules\InteractiveWhiteboard\Services;
 
 use App\Models\ExternalApp;
 use App\Services\ExternalApps\ExternalAppService;
@@ -13,7 +13,7 @@ class WhiteboardService
      */
     public function isModuleEnabled(): bool
     {
-        $app = ExternalApp::where('slug', 'whiteboard')->first();
+        $app = ExternalApp::where('slug', 'interactive-whiteboard')->first();
         return $app && $app->is_enabled;
     }
 
@@ -83,7 +83,7 @@ class WhiteboardService
         }
 
         // Fall back to module default setting
-        $default = ExternalAppService::staticGetModuleEnv('whiteboard', 'WHITEBOARD_COLLAB_DEFAULT', '0');
+        $default = ExternalAppService::staticGetModuleEnv('interactive-whiteboard', 'WHITEBOARD_COLLAB_DEFAULT', '0');
         return (bool) $default;
     }
 
