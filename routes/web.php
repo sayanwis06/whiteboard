@@ -1,6 +1,7 @@
 <?php
 Route::middleware(['auth'])->prefix('external-apps/whiteboard')->group(function () {
     Route::get('/session/{courseId}', 'Controllers\WhiteboardController@session');
+    Route::post('/broadcasting/auth', 'Controllers\WhiteboardController@authenticate');
     Route::post('/broadcast', 'Controllers\WhiteboardController@broadcast');
     Route::post('/toggle-collab', 'Controllers\WhiteboardController@toggleCollab');
     Route::get('/check-access/{courseId}', 'Controllers\WhiteboardController@checkAccess');

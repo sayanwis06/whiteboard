@@ -22,6 +22,45 @@ class WhiteboardController extends Controller
     }
 
     /**
+     * Inject module-specific Pusher configuration into Laravel's broadcasting system.
+     */
+    protected function injectPusherConfig()
+    {
+        $appService = new \App\Services\ExternalApps\ExternalAppService();
+        $slug = 'interactive-whiteboard';
+        
+        if (!$appService->staticGetModuleEnv($slug, 'PUSHER_APP_KEY')) {
+            return;
+        }
+
+        config(['broadcasting.default' => 'pusher']);
+        config(['broadcasting.connections.pusher' => [
+            'driver'  => 'pusher',
+            'key'     => $appService->staticGetModuleEnv($slug, 'PUSHER_APP_KEY'),
+            'secret'  => $appService->staticGetModuleEnv($slug, 'PUSHER_APP_SECRET'),
+            'app_id'  => $appService->staticGetModuleEnv($slug, 'PUSHER_APP_ID'),
+            'options' => [
+                'cluster'   => $appService->staticGetModuleEnv($slug, 'PUSHER_APP_CLUSTER', 'mt1'),
+                'useTLS'    => true,
+            ],
+        ]]);
+    }
+
+    /**
+     * Handle presence channel authentication for Laravel Echo
+     */
+    public function authenticate(Request $request)
+    {
+        if (!$this->service->isModuleEnabled()) {
+            abort(403, 'Whiteboard module is not enabled.');
+        }
+
+        $this->injectPusherConfig();
+
+        return \Illuminate\Support\Facades\Broadcast::auth($request);
+    }
+
+    /**
      * Load the whiteboard session page for a course.
      */
     public function session($courseId)
@@ -59,6 +98,8 @@ class WhiteboardController extends Controller
         $user = auth()->user();
         $courseId = $request->input('course_id');
 
+        $this->injectPusherConfig();
+
         if (!$this->service->isModuleEnabled()) {
             return response()->json(['error' => 'Module not available'], 403);
         }
@@ -90,6 +131,8 @@ class WhiteboardController extends Controller
     {
         $user = auth()->user();
         $courseId = $request->input('course_id');
+
+        $this->injectPusherConfig();
 
         if (!$this->service->isInstructor($user, $courseId)) {
             return response()->json(['error' => 'Only instructors can toggle collaborative mode'], 403);

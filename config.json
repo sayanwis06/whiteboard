@@ -3,8 +3,36 @@
     "description": "Real-time collaborative whiteboard for Live Online Classes using Fabric.js",
     "version": "1.0.0",
     "WHITEBOARD_COLLAB_DEFAULT": "0",
+    "PUSHER_APP_ID": "",
+    "PUSHER_APP_KEY": "",
+    "PUSHER_APP_SECRET": "",
+    "PUSHER_APP_CLUSTER": "mt1",
     "metadata": {
         "fields": {
+            "PUSHER_APP_ID": {
+                "type": "text",
+                "label": "Pusher App ID",
+                "placeholder": "Enter your Pusher App ID",
+                "required": true
+            },
+            "PUSHER_APP_KEY": {
+                "type": "text",
+                "label": "Pusher App Key",
+                "placeholder": "Enter your Pusher App Key",
+                "required": true
+            },
+            "PUSHER_APP_SECRET": {
+                "type": "password",
+                "label": "Pusher App Secret",
+                "placeholder": "Enter your Pusher App Secret",
+                "required": true
+            },
+            "PUSHER_APP_CLUSTER": {
+                "type": "text",
+                "label": "Pusher App Cluster",
+                "placeholder": "e.g., mt1",
+                "required": true
+            },
             "WHITEBOARD_COLLAB_DEFAULT": {
                 "type": "switch",
                 "label": "Collaborative Mode by Default",

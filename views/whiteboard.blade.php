@@ -313,19 +313,19 @@
 
         // ===== Configuration =====
         const CONFIG = {
-            courseId: {{ $courseId }},
-            userId: {{ $user->id }},
-            userName: @json($user->full_name),
+            userId: {{ $user->id ?? 0 }},
+            userName: '{{ addslashes($user->full_name ?? "Guest") }}',
+            courseId: '{{ $courseId }}',
             isInstructor: {{ $isInstructor ? 'true' : 'false' }},
             canDraw: {{ $canDraw ? 'true' : 'false' }},
             isCollabMode: {{ $isCollabMode ? 'true' : 'false' }},
-            csrfToken: '{{ csrf_token() }}',
-            broadcastUrl: '{{ url("external-apps/whiteboard/broadcast") }}',
             toggleCollabUrl: '{{ url("external-apps/whiteboard/toggle-collab") }}',
-            pusherKey: '{{ env("PUSHER_APP_KEY", "") }}',
-            pusherCluster: '{{ env("PUSHER_APP_CLUSTER", "mt1") }}',
-            authEndpoint: '{{ url("/broadcasting/auth") }}',
+            broadcastUrl: '{{ url("external-apps/whiteboard/broadcast") }}',
             saveSnapshotUrl: '{{ url("external-apps/whiteboard/save-snapshot") }}',
+            pusherKey: '{{ \App\Services\ExternalApps\ExternalAppService::staticGetModuleEnv("interactive-whiteboard", "PUSHER_APP_KEY", "") }}',
+            pusherCluster: '{{ \App\Services\ExternalApps\ExternalAppService::staticGetModuleEnv("interactive-whiteboard", "PUSHER_APP_CLUSTER", "mt1") }}',
+            authEndpoint: '{{ url("external-apps/whiteboard/broadcasting/auth") }}',
+            csrfToken: '{{ csrf_token() }}'
         };
 
         // ===== State =====
