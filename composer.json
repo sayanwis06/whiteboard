@@ -1,0 +1,7 @@
+{
+    "name": "tadreeblms/interactive-whiteboard",
+    "description": "Interactive Whiteboard Module",
+    "require": {
+        "pusher/pusher-php-server": "^7.2"
+    }
+}

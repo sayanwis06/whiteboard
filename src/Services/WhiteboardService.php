@@ -28,7 +28,7 @@ class WhiteboardService
         }
 
         // Check if user is an instructor (teacher) for this course
-        if ($user->courses()->where('courses.id', $courseId)->exists()) {
+        if ($user->courses()->where('courses.id', (int) $courseId)->exists()) {
             return true;
         }
 
@@ -46,12 +46,12 @@ class WhiteboardService
         }
 
         // Instructor for this course
-        if ($user->courses()->where('courses.id', $courseId)->exists()) {
+        if ($user->courses()->where('courses.id', (int) $courseId)->exists()) {
             return true;
         }
 
         // Student enrolled in this course
-        if ($user->purchasedCourses()->contains('id', $courseId)) {
+        if ($user->purchasedCourses()->where('courses.id', (int) $courseId)->exists()) {
             return true;
         }
 

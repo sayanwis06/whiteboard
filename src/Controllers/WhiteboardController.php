@@ -33,6 +33,11 @@ class WhiteboardController extends Controller
             return;
         }
 
+        $autoloadPath = base_path('modules/interactive-whiteboard/vendor/autoload.php');
+        if (file_exists($autoloadPath) && !class_exists('\Pusher\Pusher')) {
+            require $autoloadPath;
+        }
+
         config(['broadcasting.default' => 'pusher']);
         config(['broadcasting.connections.pusher' => [
             'driver'  => 'pusher',
@@ -51,13 +56,130 @@ class WhiteboardController extends Controller
      */
     public function authenticate(Request $request)
     {
+        $user = auth()->user();
+        $channelName = $request->channel_name;
+        $socketId = $request->socket_id;
+
+        \Log::info('Whiteboard Auth Request', ['channel' => $channelName, 'user' => $user->id]);
+
         if (!$this->service->isModuleEnabled()) {
-            abort(403, 'Whiteboard module is not enabled.');
+            \Log::warning('Whiteboard Auth Failed: Module disabled');
+            return response()->json(['message' => 'Module disabled'], 403);
         }
 
-        $this->injectPusherConfig();
+        // Extract courseId from channel name (presence-whiteboard.{courseId})
+        $courseId = str_replace('presence-whiteboard.', '', $channelName);
+        
+        // Fix for when the prefix is missing or different
+        if ($courseId === $channelName) {
+            $courseId = str_replace('whiteboard.', '', $channelName);
+        }
 
-        return \Illuminate\Support\Facades\Broadcast::auth($request);
+        // Authorization Logic
+        $isAuthorized = false;
+        $isInstructor = false;
+
+        if ((int) $courseId === 0) {
+            // Sandbox Mode
+            $isAuthorized = true;
+            $isInstructor = true;
+        } else {
+            // Real Course Session
+            $isAuthorized = $this->service->canAccessWhiteboard($user, $courseId);
+            $isInstructor = $this->service->isInstructor($user, $courseId);
+        }
+
+        if (!$isAuthorized) {
+            \Log::warning('Whiteboard Auth Failed: User not authorized', ['user' => $user->id, 'course' => $courseId]);
+            return response()->json(['message' => 'Forbidden'], 403);
+        }
+
+        // Load Pusher SDK
+        $autoloadPath = base_path('modules/interactive-whiteboard/vendor/autoload.php');
+        if (file_exists($autoloadPath) && !class_exists('\Pusher\Pusher')) {
+            require $autoloadPath;
+        }
+
+        // Initialize Pusher directly with module credentials
+        $appService = new \App\Services\ExternalApps\ExternalAppService();
+        $slug = 'interactive-whiteboard';
+        
+        $pusher = new \Pusher\Pusher(
+            $appService->staticGetModuleEnv($slug, 'PUSHER_APP_KEY'),
+            $appService->staticGetModuleEnv($slug, 'PUSHER_APP_SECRET'),
+            $appService->staticGetModuleEnv($slug, 'PUSHER_APP_ID'),
+            [
+                'cluster' => $appService->staticGetModuleEnv($slug, 'PUSHER_APP_CLUSTER', 'mt1'),
+                'useTLS' => true,
+            ]
+        );
+
+        $presenceData = [
+            'id' => $user->id,
+            'name' => $user->full_name,
+            'is_instructor' => $isInstructor
+        ];
+
+        // Generate and return auth response
+        $auth = $pusher->presence_auth($channelName, $socketId, $user->id, $presenceData);
+        
+        return response()->json(json_decode($auth, true));
+    }
+
+    /**
+     * Test connection to Pusher for the configuration script.
+     */
+    public function testConnection(Request $request)
+    {
+        try {
+            $request->validate([
+                'PUSHER_APP_ID' => 'required',
+                'PUSHER_APP_KEY' => 'required',
+                'PUSHER_APP_SECRET' => 'required',
+                'PUSHER_APP_CLUSTER' => 'required',
+            ]);
+
+            $autoloadPath = base_path('modules/interactive-whiteboard/vendor/autoload.php');
+            if (file_exists($autoloadPath) && !class_exists('\Pusher\Pusher')) {
+                require $autoloadPath;
+            }
+
+            // Set up Pusher instance directly
+            $pusher = new \Pusher\Pusher(
+                $request->PUSHER_APP_KEY,
+                $request->PUSHER_APP_SECRET,
+                $request->PUSHER_APP_ID,
+                [
+                    'cluster' => $request->PUSHER_APP_CLUSTER,
+                    'useTLS' => true,
+                ]
+            );
+
+            // Make a simple API call to test credentials
+            $result = $pusher->getChannels();
+
+            if ($result) {
+                return response()->json([
+                    'success' => true,
+                    'message' => 'Successfully connected to Pusher API. Your credentials are valid.'
+                ]);
+            } else {
+                return response()->json([
+                    'success' => false,
+                    'message' => 'Connected to Pusher, but failed to retrieve channels.'
+                ], 400);
+            }
+        } catch (\Pusher\ApiErrorException $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Pusher API Error: ' . $e->getMessage()
+            ], 400);
+        } catch (\Exception $e) {
+            return response()->json([
+                'success' => false,
+                'message' => 'Connection Error: ' . $e->getMessage()
+            ], 400);
+        }
     }
 
     /**

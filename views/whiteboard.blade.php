@@ -839,11 +839,17 @@
             // Save as PNG (download locally + save to server)
             document.getElementById('wbSave').addEventListener('click', () => {
                 const dataURL = canvas.toDataURL({ format: 'png', quality: 1 });
-                // Download locally
-                const link = document.createElement('a');
-                link.download = 'whiteboard_{{ $course->id }}_' + Date.now() + '.png';
-                link.href = dataURL;
-                link.click();
+                
+                // Only download locally if NOT in test mode (courseId != 0)
+                if (CONFIG.courseId != '0') {
+                    const link = document.createElement('a');
+                    link.download = 'whiteboard_' + CONFIG.courseId + '_' + Date.now() + '.png';
+                    link.href = dataURL;
+                    link.click();
+                } else {
+                    console.log('Test session: Skipping local download, saving to server only.');
+                }
+                
                 // Also save snapshot to server
                 snapshotSaved = false;
                 saveSnapshotToServer(false);
